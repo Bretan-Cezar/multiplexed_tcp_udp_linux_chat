@@ -26,7 +26,7 @@ uint16_t target_count;
 char signal_type;
 int yes = 1;
 
-int main(int argc, char** argv)
+int main(int argc, char** argv) 
 {
 
     SOCKET srv_clnt_tcp, clnt_target_udp, recv_udp, max_fd;
@@ -34,10 +34,10 @@ int main(int argc, char** argv)
     struct hostent *hp;
     char buf[256], msg[200];
     uint16_t new_port;
+    
 
-
-    if (argc != 2)
-    {
+    if (argc != 2) 
+    { 
         printf("Usage: %s <server_name>\n", argv[0]);
         return 1;
     }
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     memset(buf, 0, 256);
 
     clnt_target_udp = socket(AF_INET, SOCK_DGRAM, 0);
-
+    
     recv_udp = socket(AF_INET, SOCK_DGRAM, 0);
 
     self_addr.sin_addr.s_addr = INADDR_ANY;
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     max_fd = (srv_clnt_tcp < recv_udp) ? recv_udp : srv_clnt_tcp;
 
-    while (true)
+    while (true) 
     {
 
         curr_rfds_set = main_rfds_set;
@@ -110,9 +110,9 @@ int main(int argc, char** argv)
             return 1;
         }
 
-
+              
         if (FD_ISSET(0, &curr_rfds_set)) {
-
+                    
             // Accepting messages from the client's input. 0 = STDIN
 
             memset(buf, 0, 256);
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
                 target.sin_family = AF_INET;
 
                 bs = sendto(clnt_target_udp, msg, 200, 0, (struct sockaddr*)&target, l);
-
+                
                 bs = send(srv_clnt_tcp, msg, 200, 0);
             }
         }
@@ -157,10 +157,10 @@ int main(int argc, char** argv)
 
             memset(buf, 0, 256);
             br = recv(srv_clnt_tcp, buf, 256, 0);
-
+              
             // We check for the first char in the buffer.
             if (buf[0] == '+' || buf[0] == '-') {
-
+                        
                 signal_type = buf[0];
 
                 strcpy(buf, buf+1);
@@ -180,21 +180,21 @@ int main(int argc, char** argv)
                 memmove(&target.sin_addr, hp->h_addr, hp->h_length);
                 target.sin_port = new_port;
 
-
-                if (signal_type == '+')
+            
+                if (signal_type == '+') 
                 {
 
                     // '+' indicates an arrival
 
                     printf("[SERVER] Client from %s:%d has joined the chat.\n", inet_ntoa(target.sin_addr), ntohs(target.sin_port));
                 }
-                else
+                else 
                 {
-
+                    
                     // '-' indicates a departure
 
                     printf("[SERVER] Client from %s:%d has left the chat.\n", inet_ntoa(target.sin_addr), ntohs(target.sin_port));
-
+                    
                 }
             }
         }
@@ -207,11 +207,11 @@ int main(int argc, char** argv)
             br = recvfrom(recv_udp, msg, 200, 0, (struct sockaddr*)&from, &l);
 
             printf("Received message from %s:%d - %s\n", inet_ntoa(from.sin_addr), ntohs(from.sin_port), msg);
-
-
+            
+            
         }
-
-
+        
+        
     }
     return 0;
 }

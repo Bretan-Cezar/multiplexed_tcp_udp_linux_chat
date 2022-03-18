@@ -30,7 +30,7 @@ uint32_t l = sizeof(struct sockaddr_in), bs, br;
 uint16_t client_count = 0;
 uint16_t new_port, c_port;
 
-int main(int argc, char** argv)
+int main(int argc, char** argv) 
 {
 
     SOCKET srv_tcp, max_fd, curr_fd, new_fd, fd;
@@ -43,14 +43,14 @@ int main(int argc, char** argv)
     server.sin_port = htons(PORT);
 
     // Avoiding bind error: port already in use
-    if (setsockopt(srv_tcp, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
+    if (setsockopt(srv_tcp, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) 
     {
         perror("setsockopt error:");
         exit(1);
     }
 
     // Binding the server socket
-    if (bind(srv_tcp, (const struct sockaddr*)&server, sizeof(server)) < 0)
+    if (bind(srv_tcp, (const struct sockaddr*)&server, sizeof(server)) < 0) 
     {
 
         perror("Bind error");
@@ -66,24 +66,24 @@ int main(int argc, char** argv)
 
     listen(srv_tcp, 16);
 
-    while (true)
+    while (true) 
     {
         curr_fds_set = main_fds_set;
 
-        if (select(max_fd+1, &curr_fds_set, NULL, NULL, NULL) < 0)
+        if (select(max_fd+1, &curr_fds_set, NULL, NULL, NULL) < 0) 
         {
             perror("Error on select");
             return 1;
         }
 
         // We start from 3 since 0 is STDIN, 1 is STDOUT, and 2 is STDERR
-        for (curr_fd = 3; curr_fd <= max_fd; curr_fd++)
+        for (curr_fd = 3; curr_fd <= max_fd; curr_fd++) 
         {
 
-            if (FD_ISSET(curr_fd, &curr_fds_set))
+            if (FD_ISSET(curr_fd, &curr_fds_set)) 
             {
 
-                if (curr_fd == srv_tcp)
+                if (curr_fd == srv_tcp) 
                 {
                     // Treating when a new client has arrived.
 
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
                     new_fd = accept(srv_tcp, (struct sockaddr*)&client, &l);
                     new_port = client.sin_port;
 
-                    if (new_fd < 0)
+                    if (new_fd < 0) 
                     {
                         perror("Error on accept");
                         close(srv_tcp);
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
                     }
 
                     // New FDs are allocated in ascending order, therefore the new one will take the biggest value
-                    if (new_fd > max_fd)
+                    if (new_fd > max_fd) 
                     {
                         max_fd = new_fd;
                     }
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
                     // Adding the new FD to the main set
                     FD_SET(new_fd, &main_fds_set);
 
-                    printf("New client connected from %s:%d ; socket #%d\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port), new_fd);
+                    printf("New client connected from %s:%d ; socket #%d\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port), new_fd); 
                     client_count++;
 
                     // Sending the number of currently connected clients to the new client.
@@ -129,23 +129,23 @@ int main(int argc, char** argv)
 
                     // Sending the arrival notification to all clients except for the new one via tcp.
                     // The client will know it is an arrival notification because of the '+' as the 1st char in the sent buffer.
-                    for (fd = 3; fd <= max_fd; fd++)
+                    for (fd = 3; fd <= max_fd; fd++) 
                     {
 
                         if (FD_ISSET(fd, &tmp_fds_set) && fd != srv_tcp && fd != new_fd) {
-
+                            
                             strcpy(buf, "+");
                             strcat(buf, inet_ntoa(client.sin_addr));
 
                             send(fd, buf, 256, 0);
                             send(fd, &new_port, sizeof(uint16_t), 0);
-
+                            
                         }
                     }
                 }
 
                 else {
-
+                        
                     // Treating the case when an existing client sends a message to the clients.
                     // Although the client itself will execute the sending, these messages
                     // will still be monitored by the server, since they need to be checked if they match "QUIT"
@@ -158,14 +158,14 @@ int main(int argc, char** argv)
                     getpeername(curr_fd, (struct sockaddr*)&client, &l);
 
                     // If the message matches "QUIT", or is an empty message that can only be sent if the client Ctrl+C 'd
-                    if (strcmp(msg, "QUIT") == 0 || br == 0)
+                    if (strcmp(msg, "QUIT") == 0 || br == 0) 
                     {
-
-                        if (br == 0)
+                            
+                        if (br == 0) 
                         {
                             printf("Client on socket #%d forcibly hung up.\n", curr_fd);
                         }
-                        else
+                        else 
                         {
 
                             printf("Received disconnection request from: %s:%d ; socket #%d.\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port), curr_fd);
@@ -173,17 +173,17 @@ int main(int argc, char** argv)
                             sprintf(buf, "Disconnection request granted.\n");
                             send(curr_fd, buf, sizeof(buf), 0);
                         }
-
+                            
                         memset(buf, 0, 256);
 
                         tmp_fds_set = main_fds_set;
-
+                        
                         // Sending the departure notification to all clients except for the new one via tcp.
                         // The client will know it is an departure notification because of the '-' as the 1st char in the sent buffer.
-                        for (fd = 3; fd <= max_fd; fd++)
+                        for (fd = 3; fd <= max_fd; fd++) 
                         {
 
-                            if (FD_ISSET(fd, &tmp_fds_set) && fd != srv_tcp && fd != curr_fd)
+                            if (FD_ISSET(fd, &tmp_fds_set) && fd != srv_tcp && fd != curr_fd) 
                             {
                                 strcpy(buf, "-");
                                 strcat(buf, inet_ntoa(client.sin_addr));
@@ -200,14 +200,14 @@ int main(int argc, char** argv)
                         client_count--;
 
                     }
-                    else
+                    else 
                     {
                         // If the message is neither of the above, a control message will be shown.
 
                         printf("Message sent by %s:%d - \"%s\"\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port), msg);
 
                     }
-
+                    
                 }
             }
         }
